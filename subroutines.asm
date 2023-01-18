@@ -13,12 +13,11 @@
 ;;;; DESTROYED: A, A', BC, HL.
 
 spritebyrow:
-
 	ex af,af'  ; We store C (width) in A'. Faster than PUSHing and PULLing several times, you'll see.
 	ld a,c
 	ex af,af' 
 
-l_ext:			; "The" loop. Actually, outer loop, each row per cicle.
+theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	ld a,b
 	ld b,0   ;;; Now BC = C (width)
 	ldir  ;;;; We print a whole row of C bytes
@@ -27,8 +26,8 @@ l_ext:			; "The" loop. Actually, outer loop, each row per cicle.
 	ex af,af' ; We restore C (width) and we place DE to the beginning of the line
 	ld c,a    ; Just L minus C, so there we are again.
 	ex af,af' ; If we had done PUSH and POP, it would be slightly more time-consuming each time.
-	ld a,e
-	sub c    
+	ld a,e    ; This four lines take 16 t-states, whereas PUSH and POP take 11 each one.
+	sub c     ; However, we should PUSH and POP each cycle, 22 t-states instead of 16.
 	ld e,a
 
 	ld a,d  ; 	;;;;; Now we need to check: Are we in the last line of a cell? (Line 7 if we start by 0).
@@ -36,7 +35,7 @@ l_ext:			; "The" loop. Actually, outer loop, each row per cicle.
 	cp 7
 	jp z,$+7  ; If we are in line 7, we jump to the corresponding corrections.
 	inc d   	; If not, the next DE is DE+256, that is, D=D+1.	  
-	djnz l_ext ; Back to the loop
+	djnz theloop ; Back to the loop
 	ret				 ; Ending of the routine
 
 	ld a,e      ;;;; Ok, line 7. But, are we at the last line of a "third" of the screen? 
@@ -47,7 +46,7 @@ l_ext:			; "The" loop. Actually, outer loop, each row per cicle.
 	add a,32  ; Incredibly easy. The next line begins at DE+32, so...
 	ld e,a    ;;; 
 	inc d     ;;; 
-	djnz l_ext  ;;; The loop
+	djnz theloop  ;;; The loop
 	ret
 
 	notsobad: 	; We are in a line 7 but not at the end of a "third".
@@ -57,6 +56,6 @@ l_ext:			; "The" loop. Actually, outer loop, each row per cicle.
 	ld a,-7     ; So D-7 and E+32, that is DE - 1760
 	add a,d   
 	ld d,a    			
-	djnz l_ext  ; The loop
+	djnz theloop  ; The loop
 	ret 
 ;;;;;; End of the subroutine spritebyrow
