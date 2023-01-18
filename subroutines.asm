@@ -10,7 +10,7 @@
 ;;;; and the height can be arbitrary (no need to be 8*n).
 ;;;; INPUT: HL, address of the (first byte of) the buffer; DE, absolute address of the screen memory (not coordinates).
 ;;;;        B, height in pixels, C, width in blocks of eight bits (bytes).
-;;;; DESTROYED: A, A', BC, HL.
+;;;; DESTROYED: A, A', BC, HL, DE.
 
 spritebyrow:
 	ex af,af'  ; We store C (width) in A'. Faster than PUSHing and PULLing several times, you'll see.
