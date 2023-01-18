@@ -16,7 +16,6 @@ spritebyrow:
 	ex af,af'  ; We store C (width) in A'. Faster than PUSHing and PULLing several times, you'll see.
 	ld a,c
 	ex af,af' 
-
 theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	ld a,b
 	ld b,0   ;;; Now BC = C (width)
@@ -24,13 +23,13 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	ld b,a  ; B restore its original value
 	
 	ex af,af' ; We restore C (width) and we place DE to the beginning of the line
-	ld c,a    ; Just L minus C, so there we are again.
+	ld c,a    ; Just E minus C, so there we are again.
 	ex af,af' ; If we had done PUSH and POP, it would be slightly more time-consuming each time.
-	ld a,e    ; This four lines take 16 t-states, whereas PUSH and POP take 11 each one.
-	sub c     ; However, we should PUSH and POP each cycle, 22 t-states instead of 16.
+	ld a,e    ; We must not worry about D. Horizontal displacement only affects E.
+	sub c     
 	ld e,a
 
-	ld a,d  ; 	;;;;; Now we need to check: Are we in the last line of a cell? (Line 7 if we start by 0).
+	ld a,d     ; Now we need to check: Are we in the last line of a cell? (Line 7 if we start by 0).
 	and 7 ;  
 	cp 7
 	jp z,$+7  ; If we are in line 7, we jump to the corresponding corrections.
