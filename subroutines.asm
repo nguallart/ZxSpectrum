@@ -40,8 +40,18 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 
 	ld a,e      ;;;; Ok, line 7. But, are we at the last line of a "third" of the screen? 
 	add a,32      ; 
-	jp nc, notsobad ; If we are not, we jump.
+	jp c, sobad ; If we not, we jump.
+		 	    
+	ld a,32    ; If not, we are in a line 7 but not at the end of a "third". 
+	add a,e    ;;; We have to substract 1760 from DE. Why?
+	ld e,a	   ; We go 7 lines up to line 0 (the first one of the cell), that is 7*256 = 1732  
+	ld a,-7   ; and then to the line 0 of the cell right down (that is +32).  
+	add a,d   ; So D-7 and E+32, that is DE - 1760
+	ld d,a    			
+	djnz theloop  ; The loop
+	ret 
 
+	sobad:
 	ld a,e 	; We are at the last line of a third.
 	add a,32  ; Incredibly easy. The next line begins at DE+32, so...
 	ld e,a    ;;; 
@@ -49,13 +59,5 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	djnz theloop  ;;; The loop
 	ret
 
-	notsobad: 	; We are in a line 7 but not at the end of a "third".
-	ld a,32     ;;; We have to substract 1760 from DE. Why?
-	add a,e     ; We go 7 lines up to line 0 (the first one of the cell), that is 7*256 = 1732
-	ld e,a	    ; and then to the line 0 of the cell right down (that is +32).
-	ld a,-7     ; So D-7 and E+32, that is DE - 1760
-	add a,d   
-	ld d,a    			
-	djnz theloop  ; The loop
-	ret 
+	
 ;;;;;; End of the subroutine spritebyrow
