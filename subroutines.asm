@@ -21,7 +21,7 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	ld a,b
 	ld b,0   ;;; Now BC = C (width)
 	ldir  ;;;; We print a whole row of C bytes
-	ld b,a  ; C restore its original value
+	ld b,a  ; B restore its original value
 	
 	ex af,af' ; We restore C (width) and we place DE to the beginning of the line
 	ld c,a    ; Just L minus C, so there we are again.
