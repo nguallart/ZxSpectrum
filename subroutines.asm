@@ -69,6 +69,7 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 ;;;; Strengths: The same as spritbyrow. 
 ;;;; INPUT: HL, origin (top left byte of the square); DE, destination (first byte),
 ;;;;        B, height in pixels, C, width in bytes.
+;;;; DESTROYED: HL, DE, BC, A, A'.
 
 copy_background_byrow:	
 
