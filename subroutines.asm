@@ -20,7 +20,7 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	ld a,b
 	ld b,0   ;;; Now BC = C (width)
 	ldir  ;;;; We print a whole row of C bytes
-	ld b,a  ; B restore its original value
+	ld b,a  ; B restores its original value
 	
 	ex af,af' ; We restore C (width) and we place DE to the beginning of the line
 	ld c,a    ; Just E minus C, so there we are again.
@@ -57,6 +57,65 @@ theloop:			; "The" loop. Actually, outer loop, each row per cicle.
 	inc d     ;;; 
 	djnz theloop  ;;; The loop
 	ret
-
-	
 ;;;;;; End of the subroutine spritebyrow
+
+
+
+
+
+;;;; Subroutine copy_background_byrow: It does the opposite of spritebyrow.
+;;;; What it does: It stores a rectangle from the video memory, and stores it in a buffer by rows.
+;;;; Weakness: No previous checks. Possible faliure if inadequate input.
+;;;; Strengths: The same as spritbyrow. 
+;;;; INPUT: HL, origin (top left byte of the square); DE, destination (first byte),
+;;;;        B, height in pixels, C, width in bytes.
+
+copy_background_byrow:	
+
+	ex af,af'
+	ld a,c
+	ex af,af'   ; We store C in A'. We will need to restore it again and again. 
+copyrow:
+	ld a,b
+	ld b,0   ;;; BC = C (width of a row)
+	ldir  ;;;; We store a row of C bytes in the buffer
+	ld b,a  ; We retrieve B (number of lines) 
+	
+	ex af,af'
+	ld c,a
+	ex af,af' ;; We restore the original C
+
+	ld a,l
+	sub c
+	ld l,a    ;;; Return to the beginning of the current line in the video memory 
+
+	ld a,h 	; Are we in a 7th line in the video memory?
+	and 7
+	cp 7
+	jp z, correct   ;;; If we are, we jump to the corrections
+	inc h           ;;;; If not, next line is HL+256
+	djnz copyrow    ;;;; We keep on with the loop
+	ret  ;;; Eventual ending of the subroutine
+	
+	correct: ;;; We are in a 7th line
+	ld a,l        
+	add a,32      
+	jp c,sobad_;  ; We jumo to this section if we are also at the last line of a "third"
+
+	ld a,32 	; Otherwise, we do the same thing that we did in spritebyrow.
+	add a,l
+	ld l,a	
+	ld a,-7    
+	add a,h  ; 
+	ld h,a    	   		
+	djnz copyrow   ; Loop and eventual ending
+	ret  
+		
+	sobad_:	; End of a third
+	ld a,l
+	add a,32
+	ld l,a    ;;; Again, just HL+32
+	inc h     ;;;
+	djnz copyrow  ;;; Loop and eventual end
+	ret  
+;;;;;; End of subroutine copy_background_byrow
