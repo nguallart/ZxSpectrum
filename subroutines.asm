@@ -12,51 +12,37 @@
 ;;;;        B, height in pixels, C, width in blocks of eight bits (bytes).
 ;;;; DESTROYED: A, A', BC, HL, DE.
 
-spritebyrow:
-	ex af,af'  ; We store C (width) in A'. Faster than PUSHing and PULLing several times, you'll see.
-	ld a,c
-	ex af,af' 
-theloop:			; "The" loop. Actually, outer loop, each row per cicle.
-	ld a,b
-	ld b,0   ;;; Now BC = C (width)
-	ldir  ;;;; We print a whole row of C bytes
-	ld b,a  ; B restores its original value
+spritebyrow:	ex af,af'  ; We store C (width) in A'. Faster than PUSHing and PULLing several times, you'll see.	
+		ld a,c
+		ex af,af' 
+		
+theloop:	ld a,b		; "The" loop. Actually, outer loop, each row per cicle.
+		ld b,0   ;;; Now BC = C (width)
+		ldir  ;;;; We print a whole row of C bytes
+		ld b,a  ; B restores its original value
 	
-	ex af,af' ; We restore C (width) and we place DE to the beginning of the line
-	ld c,a    ; Just E minus C, so there we are again.
-	ex af,af' ; If we had done PUSH and POP, it would be slightly more time-consuming each time.
-	ld a,e    ; We must not worry about D. Horizontal displacement only affects E.
-	sub c     
-	ld e,a
+		ex af,af' ; We restore C (width) and we place DE to the beginning of the line
+		ld c,a    ; Just E minus C, so there we are again.
+		ex af,af' ; If we had done PUSH and POP, it would be slightly more time-consuming each time.
+		ld a,e    ; We must not worry about D. Horizontal displacement only affects E.
+		sub c     
+		ld e,a
+		inc d      ; Now we move to the next (down) line
+		ld a,d     ; Now we need to check: Are we in the last line of a cell? (Line 7 if we start by 0).
+		and 7 ;  
+		jp z,$+6  ; If we jump to the next cell, we jump to the corresponding corrections.	  
+		djnz theloop ; Back to the loop
+		ret				 ; Ending of the routine
 
-	ld a,d     ; Now we need to check: Are we in the last line of a cell? (Line 7 if we start by 0).
-	and 7 ;  
-	cp 7
-	jp z,$+7  ; If we are in line 7, we jump to the corresponding corrections.
-	inc d   	; If not, the next DE is DE+256, that is, D=D+1.	  
-	djnz theloop ; Back to the loop
-	ret				 ; Ending of the routine
-
-	ld a,e      ;;;; Ok, line 7. But, are we at the last line of a "third" of the screen? 
-	add a,32      ; 
-	jp c, sobad ; If we not, we jump.
-		 	    
-	ld a,32    ; If not, we are in a line 7 but not at the end of a "third". 
-	add a,e    ;;; We have to substract 1760 from DE. Why?
-	ld e,a	   ; We go 7 lines up to line 0 (the first one of the cell), that is 7*256 = 1732  
-	ld a,-7   ; and then to the line 0 of the cell right down (that is +32).  
-	add a,d   ; So D-7 and E+32, that is DE - 1760
-	ld d,a    			
-	djnz theloop  ; The loop
-	ret 
-
-	sobad:
-	ld a,e 	; We are at the last line of a third.
-	add a,32  ; Incredibly easy. The next line begins at DE+32, so...
-	ld e,a    ;;; 
-	inc d     ;;; 
-	djnz theloop  ;;; The loop
-	ret
+		ld a,e      ;;;; Corrections
+		add a,32       
+		ld e,a
+		jp c, $+7  ; If it was the end of a third, we are done 
+		ld a,d   ; and then to the line 0 of the cell right down (that is +32).  
+		sub 8   
+		ld d,a    			
+		djnz theloop  ; Back to the loop
+		ret 
 ;;;;;; End of the subroutine spritebyrow
 
 
