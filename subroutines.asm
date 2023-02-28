@@ -1,4 +1,4 @@
-;;;; Version 0.001. Jan 2023
+;;;; Version 0.02. Feb 2023 (original Jan 2023)
 ;;;; ZX Spectrum Assembly routines
 ;;;; Just for fun.
 
@@ -57,8 +57,7 @@ theloop:	ld a,b		; "The" loop. Actually, outer loop, each row per cicle.
 ;;;;        B, height in pixels, C, width in bytes.
 ;;;; DESTROYED: HL, DE, BC, A, A'.
 
-copy_background_byrow:	
-
+copy_background_byrow:	.
 	ex af,af'
 	ld a,c
 	ex af,af'   ; We store C in A'. We will need to restore it again and again. 
@@ -71,38 +70,23 @@ copyrow:
 	ex af,af'
 	ld c,a
 	ex af,af' ;; We restore the original C
-
 	ld a,l
 	sub c
 	ld l,a    ;;; Return to the beginning of the current line in the video memory 
-
 	ld a,h 	; Are we in a 7th line in the video memory?
-	and 7
-	cp 7
-	jp z, correct   ;;; If we are, we jump to the corrections
-	inc h           ;;;; If not, next line is HL+256
-	djnz copyrow    ;;;; We keep on with the loop
+	inc h
+        and 7
+	jp z, $+6  ;;; If we are, we jump to the corrections
+	djnz copyrow
 	ret  ;;; Eventual ending of the subroutine
 	
-	correct: ;;; We are in a 7th line
-	ld a,l        
-	add a,32      
-	jp c,sobad_;  ; We jumo to this section if we are also at the last line of a "third"
-
-	ld a,32 	; Otherwise, we do the same thing that we did in spritebyrow.
-	add a,l
-	ld l,a	
-	ld a,-7    
-	add a,h  ; 
+	ld a,l       ; Corrections 
+	add a,32  
+        ld l,a    
+	jp c,$+7;  ; We jumo to this section if we are also at the last line of a "third"
+	ld a,h   ;Otherwise, we do the same thing that we did in spritebyrow
+        sub 8  
 	ld h,a    	   		
 	djnz copyrow   ; Loop and eventual ending
-	ret  
-		
-	sobad_:	; End of a third
-	ld a,l
-	add a,32
-	ld l,a    ;;; Again, just HL+32
-	inc h     ;;;
-	djnz copyrow  ;;; Loop and eventual end
 	ret  
 ;;;;;; End of subroutine copy_background_byrow
